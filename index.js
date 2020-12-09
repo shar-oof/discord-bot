@@ -1,10 +1,11 @@
-// this is our configuration file.
+// this is our configuration file. ye i dont change that 
+//i am on the bot vc
 const config = require('./config.json');
 //this is discord's javascript package.
 const Discord = require('discord.js');
 //this goes in front of your message to call the bot.
 const statusMsg = require('./statusMessages.json');
-const prefix = config.prefix;
+var prefix = config.prefix;
 const client = new Discord.Client();
 
 const helpEmbed = new Discord.MessageEmbed()
@@ -17,6 +18,7 @@ const helpEmbed = new Discord.MessageEmbed()
     { name: 'Check if the bot is online', value: `\`${prefix}status\`` },
     { name: 'Play Heads or Tails', value: `\`${prefix}flip <heads|tails>\``},
     { name: 'Create a poll', value: `\`${prefix}poll\``},
+    { name: ":warning:Experimental:warning:\nChange Prefix", value: `\`${prefix}prefix\``}
 );
 
 //change rich prescence here
@@ -65,6 +67,23 @@ client.on('message', message => {
   }
 });
 
+//Change prefix (by Aadi)
+client.on("message", message => {
+  if (message.author.bot) return;
+
+  if (message.content.indexOf(prefix) != 0) return;
+  const argsCP = message.content.slice(prefix.length).trim().split(/ +/g);
+  const commandCP = argsCP.shift().toLowerCase();
+
+  if (commandCP == "prefix" && argsCP.length == 0){
+    return message.reply(`The prefix is \`${prefix}\``)
+  }
+  else if(commandCP == "prefix"){
+    prefix = argsCP[0]
+    return message.reply(`The prefix is now \`${prefix}\``)
+  }
+});
+
 client.on('message', message => {
   const commandForPoll = `${prefix}poll`;
   if (message.content.startsWith(commandForPoll)) {
@@ -75,3 +94,5 @@ client.on('message', message => {
 
 //Logs into discord using the token in the ./config.json file
 client.login(config.token);
+
+//ahsan r u here?
