@@ -5,94 +5,79 @@ const config = require('./config.json');
 const Discord = require('discord.js');
 //this goes in front of your message to call the bot.
 const statusMsg = require('./statusMessages.json');
+// this is for file sytem-y stuff
+const fs = require('fs');
 var prefix = config.prefix;
 const client = new Discord.Client();
+client.commands = new Discord.Collection();
+const cooldowns = new Discord.Collection();
 
-const helpEmbed = new Discord.MessageEmbed()
-  .setColor('#f50f1a')
-  .setTitle('**OoF_bot Help**')
-  .setThumbnail('https://i.imgflip.com/26iqx5.jpg')
-  .setDescription(`RREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE`)
-  .addFields(
-    { name: 'prefix:', value: `\`${prefix}\``},
-    { name: 'Check if the bot is online', value: `\`${prefix}status\`` },
-    { name: 'Play Heads or Tails', value: `\`${prefix}flip <heads|tails>\``},
-    { name: 'Create a poll', value: `\`${prefix}poll\``},
-    { name: ":warning:Experimental:warning:\nChange Prefix", value: `\`${prefix}prefix\``}
-);
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+	const command = require(`./commands/${file}`);
+	client.commands.set(command.name, command);
+}
 
 //change rich prescence here
-client.on('ready', () => {
+client.once('ready', () => {
   console.log(`${client.user.tag} has successfully booted up.`);
   client.user.setActivity('you rage quit discord', { type: 'WATCHING' });
 });
 
-//test command, check if bot is online.
 client.on('message', message => {
-  if (message.content === `${prefix}status`) {
-    message.channel.send(statusMsg[Math.floor(Math.random() * Object.keys(statusMsg).length)]);
+	if (!message.content.startsWith(prefix) || message.author.bot) return;
+
+	const args = message.content.slice(prefix.length).trim().split(/ +/g);
+	const commandName = args.shift().toLowerCase();
+
+  const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+
+	if (!command) return;
+  if (command.guildOnly && message.channel.type === 'dm') {
+    return message.reply('I can\'t execute that command inside DMs!');
   }
+
+  if (command.args && !args.length) {
+    let reply = `You didn't provide any arguments, ${message.author}!`;
+
+		if (command.usage) {
+			reply += `\nThe proper usage would be: \`${prefix}${command.name} ${command.usage}\``;
+	  }
+
+	  return message.channel.send(reply);
+  }
+
+  if (!cooldowns.has(command.name)) {
+    cooldowns.set(command.name, new Discord.Collection());
+  }
+  
+  const now = Date.now();
+  const timestamps = cooldowns.get(command.name);
+  const cooldownAmount = (command.cooldown || 3) * 1000;
+
+  if (timestamps.has(message.author.id)) {
+    const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+
+    if (now < expirationTime) {
+      const timeLeft = (expirationTime - now) / 1000;
+      return message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+    }
+  }
+
+  timestamps.set(message.author.id, now);
+	setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+
+
+	try {
+		command.execute(message, args);
+	} catch (error) {
+		console.error(error);
+		message.reply('there was an error trying to execute that command!');
+	}
 });
 
-client.on('message', message => {
-  if (message.content === `${prefix}help`) {
-    message.channel.send(helpEmbed);
-  }
-});
 
-//Heads or tails
-client.on('message', message => {
-  //if a bot tried to flip the coin, it doesn't execute the code
-  if (message.author.bot) return;
-  //if it doesn't have the prefix as the first letter it doesn't execute the code
-  if (message.content.indexOf(prefix) !== 0) return;
-  //puts the first word in the message into a variable and turns it to lowercase
-  const argsHT = message.content.slice(prefix.length).trim().split(/ +/g);
-  const commandHT = argsHT.shift().toLowerCase();
-  //if the command is flip, it checks what the accepted replies are and makes it's choice on what to send based on them.
-  if (commandHT === 'flip') {
-    const acceptedRepliesHT = ['heads', 'tails'];
-
-    const choiceHT = argsHT[0];
-    //if the choice isn't either heads or tails it tells you to say heads or tails, if it doesn't say anything it tells you how to play.
-    if (!choiceHT) return message.channel.send(`How to play: \`${prefix}flip <heads|tails>\``);
-    if (!acceptedRepliesHT.includes(choiceHT)) return message.channel.send(`Only these responses are accepted: \`${acceptedRepliesHT.join(', ')}\``);
-
-      if (choiceHT === 'heads') {
-        return message.reply(`The coin flipped tails, you lost!`)
-      }
-      else if (choiceHT === 'tails') {
-        return message.reply(`The coin flipped heads, you lost!`)
-      }
-  }
-});
-
-//Change prefix (by Aadi)
-client.on("message", message => {
-  if (message.author.bot) return;
-
-  if (message.content.indexOf(prefix) != 0) return;
-  const argsCP = message.content.slice(prefix.length).trim().split(/ +/g);
-  const commandCP = argsCP.shift().toLowerCase();
-
-  if (commandCP == "prefix" && argsCP.length == 0){
-    return message.reply(`The prefix is \`${prefix}\``)
-  }
-  else if(commandCP == "prefix"){
-    prefix = argsCP[0]
-    return message.reply(`The prefix is now \`${prefix}\``)
-  }
-});
-
-client.on('message', message => {
-  const commandForPoll = `${prefix}poll`;
-  if (message.content.startsWith(commandForPoll)) {
-    message.react('780508306149605377');
-    message.react('780508365020332072');
-  }
-});
 
 //Logs into discord using the token in the ./config.json file
 client.login(config.token);
-
-//ahsan r u here?
