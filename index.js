@@ -77,7 +77,5 @@ client.on('message', message => {
 	}
 });
 
-
-
 //Logs into discord using the token in the ./config.json file
 client.login(config.token);
