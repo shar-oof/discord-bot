@@ -31,7 +31,7 @@ client.on('message', message => {
 	const args = message.content.slice(prefix.length).trim().split(/ +/g);
 	const commandName = args.shift().toLowerCase();
 
-  const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+  const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.alias && cmd.alias.includes(commandName));
 
 	if (!command) return;
   if (command.guildOnly && message.channel.type === 'dm') {
@@ -67,6 +67,8 @@ client.on('message', message => {
 
   timestamps.set(message.author.id, now);
 	setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+
+
 
 
 	try {
