@@ -12,7 +12,7 @@ module.exports = {
         delete require.cache[require.resolve(`./${command.name}.js`)];
 
         try {
-            const newCommand = require(`./${command.name}.js`);
+            var newCommand = require(`./${command.name}.js`);
             message.client.commands.set(newCommand.name, newCommand);
             message.channel.send(`Command \`${command.name}\` was reloaded!`);
         } catch (error) {
@@ -20,4 +20,4 @@ module.exports = {
             message.channel.send(`There was an error while reloading a command \`${command.name}\`:\n\`${error.message}\``);
         }
     }
-}
+}//https://github.com/shar-oofo/discord-bot.git
