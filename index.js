@@ -1,5 +1,4 @@
-// this is our configuration file. ye i dont change that 
-//i am on the bot vc
+// this is our configuration file.
 const config = require('./config.json');
 //this is discord's javascript package.
 const Discord = require('discord.js');
@@ -7,7 +6,7 @@ const Discord = require('discord.js');
 const statusMsg = require('./statusMessages.json');
 // this is for file sytem-y stuff
 const fs = require('fs');
-var prefix = config.prefix;
+const prefixes = require("./commands/prefixes.json")
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 const cooldowns = new Discord.Collection();
@@ -26,6 +25,20 @@ client.once('ready', () => {
 });
 
 client.on('message', message => {
+  if (!prefixes[message.guild.id]) {
+    prefixes[message.guild.id] = {guildPrefix: ";"}
+  }
+  fs.writeFile("./commands/prefixes.json", JSON.stringify(prefixes, null, 2), (err) => {
+    if (err) console.log(err);
+  })
+
+  console.log(prefixes[message.guild.id].guildPrefix)
+
+  var prefix = prefixes[message.guild.id].guildPrefix;
+  console.log("THIS IS THE PREFIX:" + prefix + ":")
+  //var prefix = ";"
+
+
 	if (!message.content.startsWith(prefix) || message.author.bot) return;
 
 	const args = message.content.slice(prefix.length).trim().split(/ +/g);
@@ -33,7 +46,7 @@ client.on('message', message => {
 
   const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.alias && cmd.alias.includes(commandName));
 
-	if (!command) return;
+	if (!command) return message.reply(":anger:was:anger:there:anger:a:anger:command,:anger:you:anger:spammer:anger:");
   if (command.guildOnly && message.channel.type === 'dm') {
     return message.reply('I can\'t execute that command inside DMs!');
   }
@@ -72,7 +85,8 @@ client.on('message', message => {
 
 
 	try {
-		command.execute(message, args);
+    if (command.args3) command.execute(message, args, prefix);
+    else command.execute(message, args)
 	} catch (error) {
 		console.error(error);
 		message.reply('there was an error trying to execute that command!');

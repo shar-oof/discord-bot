@@ -1,15 +1,22 @@
-const { prefix } = require('../config.json');
+const prefixes = require('./prefixes.json');
 const Discord = require("discord.js");
-const help = require('./help');
 
 module.exports = {
     name: "helpembed",
     description: "The better version of help",
     alias: ["h", "he"],
     usage: "<command?>",
-    execute(message, args) {
+    args3: true,
+    execute(message, args, prefix) {
         //const data = [];
         const { commands } = message.client;
+
+        console.log(prefixes)
+
+        console.log(`From Help:${prefixes[message.guild.id].guildPrefix}`)
+
+        const hprefix = prefixes[message.guild.id].guildPrefix;
+        
 
         const helpEmbed = new Discord.MessageEmbed()
             .setColor("0099ff")
@@ -18,7 +25,7 @@ module.exports = {
             .setFooter(`OoFbot is watching you rage quit discord`)
 
         if (!args.length) {
-            helpEmbed.addField("Command list", `${commands.map(command => command.name).join(', ')}\nYou can send \`${prefix}help [command name]\` to get info on a specific command!`)
+            helpEmbed.addField("Command list", `${commands.map(command => command.name).join(', ')}\nYou can send \`${hprefix}h [command name]\` to get info on a specific command!`)
             return message.channel.send(helpEmbed)
                 
         }
@@ -37,7 +44,7 @@ module.exports = {
         // data.push(`**Aliases:** ${command.alias.join(', ')}`);
         if (command.description) helpEmbed.addField(`**Description**`, `${command.description}`, true);
         //data.push(`**Description:** ${command.description}`);
-        if (command.usage) helpEmbed.addField(`**Usage**`, `${prefix}${command.name} ${command.usage}`);
+        if (command.usage) helpEmbed.addField(`**Usage**`, `${hprefix}${command.name} ${command.usage}`);
         //data.push(`**Usage:** ${prefix}${command.name} ${command.usage}`);
 
         helpEmbed.addField(`**Cooldown**`, `${command.cooldown || 3}`, true);

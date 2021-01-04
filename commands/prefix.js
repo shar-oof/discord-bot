@@ -1,22 +1,28 @@
-const { execute } = require("./status");
+var prefixes = require("./prefixes.json");
+const fs = require("fs");
 
 module.exports = {
     name: "prefix",
     description: "Query or change the prefix",
-    cooldown: 300, //in seconds
-    execute(message, args) {
-        if (message.author.bot) return;
+    cooldown: 3, //in seconds
+    args3: true,
+    execute(message, args, prefix) {
+        if (!message.author.id == 'TheNerd#7030') return message.channel.reply("U R NOT AUTHORISED");
 
-        if (message.content.indexOf(prefix) != 0) return;
-        const argsCP = message.content.slice(prefix.length).trim().split(/ +/g);
-        const commandCP = argsCP.shift().toLowerCase();
+        console.log("                                       ARGS:" + args)
 
-        if (commandCP == "prefix" && argsCP.length == 0){
-            return message.reply(`The prefix is \`${prefix}\``)
+        if (args == "") {
+            return message.channel.send(`The prefix is \`${prefix}\``);
         }
-        else if(commandCP == "prefix"){
-            prefix = argsCP[0]
-            return message.reply(`The prefix is now \`${prefix}\``)
+        else{
+            console.log("HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII" + args[0])
+            prefixes[message.guild.id].guildPrefix = args[0];
+    
+            fs.writeFile("./prefixes.json", JSON.stringify(prefixes, null, 2), (err) => {
+                if (err) console.log(err);
+            })
+
+            return message.channel.send(`The prefix is \`${prefixes[message.guild.id].guildPrefix}\``);
         }
     }
 }

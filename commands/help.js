@@ -1,4 +1,4 @@
-const { prefix } = require('../config.json');
+const prefixes = require("./prefixes.json");
 
 module.exports = {
     name: "help",
@@ -8,11 +8,13 @@ module.exports = {
     execute(message, args) {
         const data = [];
         const { commands } = message.client;
+        prefix = prefixes[message.channel.id].guildPrefix;
 
         if (!args.length) {
             data.push('Here\'s a list of all my commands:');
             data.push(commands.map(command => command.name).join(', '));
             data.push(`\nYou can send \`${prefix}help [command name]\` to get info on a specific command!`);
+            data.push(`:warning:Help is deprected, use \`${prefix}h\` instead:warning:`)
 
             return message.channel.send(data, { split: true })
                 
